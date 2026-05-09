@@ -30,12 +30,6 @@ actions!(
 #[action(namespace = app_menu)]
 pub struct OpenApplicationMenu(String);
 
-#[cfg(not(target_os = "macos"))]
-pub enum ActivateDirection {
-    Left,
-    Right,
-}
-
 #[derive(Clone)]
 struct MenuEntry {
     menu: OwnedMenu,
@@ -213,55 +207,6 @@ impl ApplicationMenu {
                     window.defer(cx, move |window, cx| handle.show(window, cx));
                 }
             })
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    pub fn open_menu(
-        &mut self,
-        action: &OpenApplicationMenu,
-        _window: &mut Window,
-        _cx: &mut Context<Self>,
-    ) {
-        self.pending_menu_open = Some(action.0.clone());
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    pub fn navigate_menus_in_direction(
-        &mut self,
-        direction: ActivateDirection,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        let current_index = self
-            .entries
-            .iter()
-            .position(|entry| entry.handle.is_deployed());
-        let Some(current_index) = current_index else {
-            return;
-        };
-
-        let next_index = match direction {
-            ActivateDirection::Left => {
-                if current_index == 0 {
-                    self.entries.len() - 1
-                } else {
-                    current_index - 1
-                }
-            }
-            ActivateDirection::Right => {
-                if current_index == self.entries.len() - 1 {
-                    0
-                } else {
-                    current_index + 1
-                }
-            }
-        };
-
-        self.entries[current_index].handle.hide(cx);
-
-        // We need to defer this so that this menu handle can take focus from the previous menu
-        let next_handle = self.entries[next_index].handle.clone();
-        cx.defer_in(window, move |_, window, cx| next_handle.show(window, cx));
     }
 
     pub fn all_menus_shown(&self, cx: &mut Context<Self>) -> bool {

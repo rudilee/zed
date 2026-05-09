@@ -1,9 +1,5 @@
-use std::sync::Arc;
-
-use anyhow::anyhow;
 use auto_update::{AutoUpdateStatus, AutoUpdater, UpdateCheckType, VersionCheckType};
 use gpui::{Empty, Render};
-use semver::Version;
 use ui::{UpdateButton, prelude::*};
 
 pub struct UpdateVersion {
@@ -36,30 +32,6 @@ impl UpdateVersion {
                 dismissed: false,
             }
         }
-    }
-
-    pub fn update_simulation(&mut self, cx: &mut Context<Self>) {
-        let next_state = match self.status {
-            AutoUpdateStatus::Idle => AutoUpdateStatus::Checking,
-            AutoUpdateStatus::Checking => AutoUpdateStatus::Downloading {
-                version: VersionCheckType::Semantic(Version::new(1, 99, 0)),
-            },
-            AutoUpdateStatus::Downloading { .. } => AutoUpdateStatus::Installing {
-                version: VersionCheckType::Semantic(Version::new(1, 99, 0)),
-            },
-            AutoUpdateStatus::Installing { .. } => AutoUpdateStatus::Updated {
-                version: VersionCheckType::Semantic(Version::new(1, 99, 0)),
-            },
-            AutoUpdateStatus::Updated { .. } => AutoUpdateStatus::Errored {
-                error: Arc::new(anyhow!("Network timeout")),
-            },
-            AutoUpdateStatus::Errored { .. } => AutoUpdateStatus::Idle,
-        };
-
-        self.status = next_state;
-        self.update_check_type = UpdateCheckType::Manual;
-        self.dismissed = false;
-        cx.notify()
     }
 
     pub fn show_update_in_menu_bar(&self) -> bool {
